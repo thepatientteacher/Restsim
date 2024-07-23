@@ -1,0 +1,228 @@
+<html><head><base href="https://webiverse.land/" >
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESL Dialogue Simulation: At a Restaurant with Speech Recognition</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f8ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.chat-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    width: 100%;
+    max-width: 600px;
+}
+.chat-header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+}
+.chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    padding: 20px;
+}
+.message {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+.bot {
+    background-color: #e6f3ff;
+    border-radius: 10px;
+    padding: 10px;
+}
+.user {
+    text-align: right;
+}
+.user span {
+    background-color: #dcf8c6;
+    border-radius: 10px;
+    padding: 10px;
+    display: inline-block;
+}
+.input-area {
+    display: flex;
+    padding: 20px;
+}
+#user-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+.btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.image-container {
+    text-align: center;
+    margin-bottom: 15px;
+}
+.image-container img {
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+#mic-btn {
+    background-color: #2196F3;
+}
+#mic-btn.listening {
+    background-color: #f44336;
+}
+</style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        ESL Dialogue Simulation: At a Restaurant
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        <div class="image-container">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80" alt="Interior of a cozy restaurant with warm lighting and wooden tables" width="600" height="400">
+        </div>
+        <div class="message bot">
+            Welcome to our restaurant! I'm your waiter for today. How may I help you?
+        </div>
+    </div>
+    <form class="input-area" method="GET" action="/simulate-dialogue">
+        <input type="text" id="user-input" name="user-response" placeholder="Type your response here..." required>
+        <button type="submit" id="send-btn" class="btn">Send</button>
+        <button type="button" id="mic-btn" class="btn">🎤</button>
+    </form>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const micBtn = document.getElementById('mic-btn');
+
+const conversation = [
+    {
+        text: "Great! Would you like to see our menu?",
+        image: "https://images.unsplash.com/photo-1570803089500-1bfa45c6c8a7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
+        alt: "An open restaurant menu on a wooden table"
+    },
+    {
+        text: "Here's our menu. What would you like to order?",
+        image: "https://images.unsplash.com/photo-1530554764233-e79e16c91d08?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
+        alt: "A waiter taking an order from customers at a restaurant table"
+    },
+    {
+        text: "Excellent choice! Would you like any drinks with that?",
+        image: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
+        alt: "Various colorful cocktails and drinks on a bar counter"
+    },
+    {
+        text: "Perfect. Your order will be ready soon. Is there anything else you need?",
+        image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
+        alt: "A chef preparing food in a restaurant kitchen"
+    },
+    {
+        text: "Thank you for dining with us. I hope you enjoy your meal!",
+        image: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
+        alt: "A delicious looking plate of food served at a restaurant"
+    }
+];
+
+let currentStep = 0;
+
+function addMessage(message, isUser = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message');
+    messageDiv.classList.add(isUser ? 'user' : 'bot');
+    
+    if (isUser) {
+        messageDiv.innerHTML = `<span>${message}</span>`;
+    } else {
+        if (typeof message === 'object') {
+            const imgContainer = document.createElement('div');
+            imgContainer.classList.add('image-container');
+            imgContainer.innerHTML = `<img src="${message.image}" alt="${message.alt}" width="600" height="400">`;
+            chatMessages.appendChild(imgContainer);
+            messageDiv.textContent = message.text;
+        } else {
+            messageDiv.textContent = message;
+        }
+    }
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function handleUserInput(userMessage) {
+    if (userMessage) {
+        addMessage(userMessage, true);
+        userInput.value = '';
+        
+        setTimeout(() => {
+            if (currentStep < conversation.length) {
+                addMessage(conversation[currentStep]);
+                currentStep++;
+            } else {
+                addMessage("Thank you for practicing! This simulation is complete. Refresh the page to start over.");
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+                micBtn.disabled = true;
+            }
+        }, 1000);
+    }
+}
+
+document.querySelector('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleUserInput(userInput.value.trim());
+});
+
+// Speech Recognition
+let recognition;
+if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        handleUserInput(transcript);
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+    };
+
+    recognition.onend = function() {
+        micBtn.classList.remove('listening');
+    };
+
+    micBtn.addEventListener('click', function() {
+        if (micBtn.classList.contains('listening')) {
+            recognition.stop();
+        } else {
+            recognition.start();
+            micBtn.classList.add('listening');
+        }
+    });
+} else {
+    micBtn.style.display = 'none';
+    console.log('Web Speech API is not supported in this browser.');
+}
+</script>
+</body></html>
